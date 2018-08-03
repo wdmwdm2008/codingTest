@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Revise subTask</title>
+    <script>
+        $(function() {
+            var content = $(revise_id).siblings(".btn.btn-primary").html();
+            var desc = content.split("<br>")[0].trim();
+            var manager = content.split("&nbsp;&nbsp;")[1].trim();
+            var comments = $(revise_id).html().trim();
+            $("#desc").val(desc);
+            $("#manager").val(manager);
+            $("#comments").val(comments);
+
+            $("#submit").click(function () {
+                var manager = $("#manager").val();
+                var desc = $("#desc").val();
+                var commentTime = revise_id.slice(1);
+                var subTaskTime = commentTime / 10;
+                console.log(subTaskTime + ":" + commentTime);
+                var goalVal = $("#goal").val();
+                var completedNum = $("#comNum").val();
+                var comments = $("#comments").val();
+                console.log(subTaskTime+":"+desc+":"+manager+":"+goalVal+":"+completedNum+":"+comments);
+                var addSubtask = $("#"+commentTime).parents(".panel-body");
+                $("#"+commentTime).parents(".col-xs-12.left-menu").remove();
+                var $subTask = $("<div class='col-xs-12 left-menu'><input class='choose_subTask' type='checkbox' onclick='chooseSubtask(this)'/>" +
+                    "<button type='button' class='btn btn-primary' data-toggle='collapse' data-target='#"+commentTime+"'>"+desc + "<br/> completed by&nbsp;&nbsp; " +
+                    manager +"</button><div id="+commentTime+" class='collapse'>"+comments+"</div><div class='jqmeter' id="+subTaskTime+"></div></div>");
+                console.log(addSubtask);
+                addSubtask.prepend($subTask);
+                $("#"+subTaskTime).jQMeter({
+                    goal: goalVal,
+                    raised: completedNum,
+                    orientation:'horizontal',
+                    width:'200px',
+                    height:'30px',
+                    displayTotal: 'true'
+                });
+                $("#content").empty();
+                $.ajax({
+                    url: "/task/reviseSubtask.do",
+                    data: {"id": subTaskTime, "desc_subtask": desc, "subtask_manager": manager, "goalNum": goalVal, "completedNum": completedNum, "comments": comments},
+                    type: "post",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.status == 1) {
+                            console.log(2);
+                        }
+                    },
+                    error: function () {
+                        alert("Network Error");
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<h4>Revising SubTask</h4>
+<div>
+    SubTask Description: <input id="desc" type="textarea"><br/>
+    SubTask Manager: &nbsp;&nbsp;&nbsp; <input id="manager" type="text"><br/>
+    Goal Num.: &nbsp;&nbsp;&nbsp;&nbsp;<input id="goal" type="text" value="100"><br/>
+    Completed Num.: &nbsp;&nbsp;&nbsp;<input id="comNum" type="text" value="80"><br/>
+    Comments: &nbsp;&nbsp;&nbsp;<input id="comments" type="textarea"><br/>
+    <input id="submit" type="submit" value="Finish">
+</div>
+</body>
+</html>

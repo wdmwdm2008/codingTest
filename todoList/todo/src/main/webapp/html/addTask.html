@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AddTask</title>
+    <script>
+        $(function(){
+            $("#submit").click(function(){
+               var manager = $("#manager").val();
+               var desc = $("#desc").val();
+               var dueDate1 = $("#due_date").val();
+               var dueDate = dueDate1 + " 00:00:00";
+               var localTime = (new Date()).getTime();
+               var $task = $("<div class='panel panel-default'> <div class='panel panel-heading'>" +
+                   "<h4 class='panel-title' style='text-align:center;'>" +
+                   "<input class='choose_task' type='checkbox' onclick='chooseAll(this);'/><a data-toggle='collapse' data-parent='#accordion1' href="+"#"+ localTime+">" +
+                   desc + "<br/>completed by:&nbsp;&nbsp;" +manager + "&nbsp;&nbsp;&nbsp;Due Date: "+ dueDate1+ "</a></h4></div>"
+                   + "<div class='panel-collapse collapse' id="+localTime+"><div class='panel-body'><input class='subButtonAdd' type='button' value='+' onclick='addSubTask(this)'/>" +
+                "</div></div></div>");
+               $("#accordion1").append($task);
+                $("#content").empty();
+                $.ajax({
+                    url:"/task/addTask.do",
+                    data:{"id": localTime, "desc_task": desc, "task_manager": manager, "due_date": dueDate},
+                    type:"post",
+                    dataType:"json",
+                    success:function(result){
+                        if(result.status == 0){
+                            console.log(2);
+                        }
+                    },
+                    error:function(){
+                        alert("Network Error");
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<h4>Adding Task</h4>
+<div>
+    Task Description: <input id="desc" type="textarea"><br/>
+    Task Manager: &nbsp;&nbsp;&nbsp; <input id="manager" type="text"><br/>
+    Due Date: <input id="due_date" type="date"><br/>
+    <input id="submit" type="submit" value="Finish">
+</div>
+</body>
+</html>

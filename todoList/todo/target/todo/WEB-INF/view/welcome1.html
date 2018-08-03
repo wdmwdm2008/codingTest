@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>TodoList</title>
+    <link rel="stylesheet" type="text/css" href="../../css/bootstrap.min.css" >
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="../../script/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../script/jqmeter.min.js"></script>
+    <script>
+        var pa;                // 指代的是每个任务要加子任务时的那个button本身（在addTask.html页面上）
+        var revise_id;        //要修改的任务的ID
+        $(function(){
+            $.ajax({
+                url:"/task/checkTask.do",
+                type:"post",
+                dataType:"json",
+                success:function(result){
+                    if(result.status == 1){
+                        var data = result.data;
+                        for(i = 0; i < data.length; i++){
+                            var localTime = data[i].task_id;
+                            var desc = data[i].desc_task;
+                            var manager = data[i].task_manager;
+                            var dueDate = fmtDate(data[i].due_date);
+                            var $task = $("<div class='panel panel-default'> <div class='panel panel-heading'>" +
+                                "<h4 class='panel-title' style='text-align:center;'>" +
+                                "<input class='choose_task' type='checkbox' onclick='chooseAll(this);'/><a data-toggle='collapse' data-parent='#accordion1' href="+"#"+ localTime+">" +
+                                desc + "<br/>completed by&nbsp;&nbsp;&nbsp;" +manager + "&nbsp;&nbsp;&nbsp;Due Date: "+ dueDate+ "</a></h4></div>"
+                                + "<div class='panel-collapse collapse' id="+localTime+"><div class='panel-body'><input class='subButtonAdd' type='button' value='+' onclick='addSubTask(this)'/>" +
+                                "</div></div></div>");
+                            $("#accordion1").append($task);
+                            var subtask = data[i].subtasks;
+                            var isDone = true;
+                            for(j = 0; j < subtask.length; j++){
+                                var sub_manager = subtask[j].subtask_manager;
+                                var subTaskTime = subtask[j].subtask_id;
+                                var commentTime = subTaskTime * 10;
+                                var sub_desc = subtask[j].desc_subtask;
+                                var goalVal = subtask[j].goalNum + "";
+                                var completedNum = subtask[j].completedNum+"";
+                                var comments = subtask[j].comments;
+                                var taskTime = subtask[j].taskid;
+                                var $subTask = $("<div class='col-xs-12 left-menu'><input class='choose_subTask' type='checkbox'/>" +
+                                    "<button type='button' class='btn btn-primary' data-toggle='collapse' data-target='#"+commentTime+"'>"+sub_desc + " <br/>completed by&nbsp;&nbsp; " +
+                                    sub_manager +"</button><div id="+commentTime+" class='collapse'>"+comments+"</div><div class='jqmeter' id="+subTaskTime+"></div></div>");
+                                $("#"+taskTime).children().prepend($subTask);
+                                $("#"+subTaskTime).jQMeter({
+                                    goal: goalVal,
+                                    raised: completedNum,
+                                    orientation:'horizontal',
+                                    width:'200px',
+                                    height:'30px',
+                                    displayTotal: 'true'
+                                });
+                                if(goalVal != completedNum)
+                                    isDone = false;
+                            }
+                            //if task is done or not
+                            if(isDone && $("#"+localTime).find(".panel-body").children().length > 1){
+                                $("#"+localTime).parents(".panel.panel-default").find("h4").css("background-color", "yellow");
+                                // $("#"+localTime).css("background-color", "red");
+                            }
+                        }
+                    } else {
+                        console.log(result.msg);
+                    }
+                },
+                error:function(){
+                    alert("Network Error");
+                }
+            });
+            // Adding task
+            $("#addTask").click(function(){
+                $.get("../../html/addTask.html", function(result){
+                    $("#content").empty().html(result);
+                });
+            });
+
+            // Deleting task
+            $("#delTask").click(function(){
+                // when task checkbox is choosed
+                $(".choose_task").each(function(){
+                    if($(this).prop("checked") == true){
+                        var id = $(this).next().attr("href").slice(1);
+                        ajaxDelete(id);
+                        $(this).parents(".panel.panel-default").remove();
+                    }
+                });
+
+                // when subtask checkbox is choosed
+                $(".choose_subTask").each(function(){
+                    if($(this).prop("checked") == true){
+                        var id = $(this).siblings(".jqmeter").attr("id");
+                        ajaxDelete(id);
+                        $(this).parent().remove();
+                    }
+                });
+            });
+
+            // revising task
+            $("#reviseTask").click(function(){
+                var len = $("input[type='checkbox']:checked").length;
+                console.log(len);
+                if(len > 1){
+                    alert("You only can revise one task every time!");
+                    return;
+                } else if(len < 1){
+                    alert("You must choose one task!");
+                    return;
+                }
+                $(".choose_task").each(function(){
+                    if($(this).prop("checked") == true){
+                        revise_id = $(this).next().attr("href");
+                        $.get("../../html/reviseTask.html", function(result){
+                            $("#content").empty().html(result);
+                        });
+                    }
+                });
+
+                $(".choose_subTask").each(function(){
+                    if($(this).prop("checked") == true){
+                        revise_id = $(this).next().attr("data-target");
+                        console.log(revise_id);
+                        $.get("../../html/reviseSubTask.html", function(result){
+                            $("#content").empty().html(result);
+                        });
+                    }
+                });
+            });
+
+            // check in or out
+            $("#checkIn").click(function(){
+                if($(this).val() == "CHECK IN"){
+                    $(this).val("CHECK OUT");
+                    alert("You have checked in!");
+                } else if (confirm("Are you sure you want to check out?")){
+                    $(this).val("CHECK IN");
+                    alert("You have checked out!");
+                }
+            });
+        });
+
+        function fmtDate(obj){
+            var date =  new Date(obj);
+            var y = 1900+date.getYear();
+            var m = "0"+(date.getMonth()+1);
+            var d = "0"+date.getDate();
+            return y+"-"+m.substring(m.length-2,m.length)+"-"+d.substring(d.length-2,d.length);
+        }
+
+        function addSubTask($obj){
+            pa = $obj;
+            $.get("../../html/addSubtask.html", function(result){
+                $("#content").empty().html(result);
+            });
+        }
+
+        // 如果父选框是true；使其子选框也全部为true，如果其为false，使其也全部为false
+        function chooseAll($obj){
+            $($obj).parents(".panel.panel-default").find(".col-xs-12.left-menu").each(function(){
+                if($($obj).prop("checked") == true){
+                    $(this).children().prop("checked", true);
+                } else {
+                    $(this).children().prop("checked", false);
+                }
+            });
+        }
+
+        function chooseSubtask($obj){
+            if($($obj).prop("checked") == true){
+                $($obj).prop("checked", true);
+            } else {
+                $($obj).prop("checked", false);
+            }
+        }
+        function ajaxDelete(obj){
+            $.ajax({
+                url:"/task/deleteTask.do",
+                data:{"id": obj},
+                type:"post",
+                dataType:"json",
+                success:function(result){
+                    if(result.status == 1){
+                        console.log(2);
+                    }
+                },
+                error:function(){
+                    alert("Network Error");
+                }
+            });
+        }
+
+
+    </script>
+</head>
+
+
+<body>
+<div class="container">
+    <input id="checkIn" type="button" value="CHECK IN"/>
+    <div class="col-sm-7" id="left-content" style="padding-top:40px;padding-left:0;">
+        <div class="panel-group" id="accordion1">
+            <input id="addTask" type="button" value="+ TASK">
+            <input id="delTask" type="button" value="DELETE">
+            <input id="reviseTask" type="button" value="REVISE">
+        </div>
+    </div>
+
+    <div class="col-sm-5" id='content'>
+    </div>
+</div>
+</body>
+</html>

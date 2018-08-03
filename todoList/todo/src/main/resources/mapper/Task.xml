@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.org.ltl.dao.TaskDao">
+    <insert id="addTask">
+        insert into data.task values (#{0}, #{1}, #{2}, #{3});
+    </insert>
+    <insert id="addSubtask">
+        insert into data.subtask values (#{0}, #{1}, #{2}, #{3}, #{4}, #{5}, #{6});
+    </insert>
+
+    <select id="checkTasks" resultMap="taskMap">
+        select * from data.task
+    </select>
+    <resultMap type="cn.org.ltl.entity.Task" id="taskMap">
+        <id column="task_id" property="task_id"/>
+        <result column="desc_task" property="desc_task"></result>
+        <result column="task_manager" property="task_manager"></result>
+        <result column="due_date" property="due_date"></result>
+        <collection property="subtasks" javaType="java.util.List" ofType="cn.org.ltl.entity.Subtask" select="findsubtasks" column="task_id">
+            <id property="subtask_id" column="subtask_id"/>
+            <result column="desc_subtask" property="desc_subtask"></result>
+            <result column="subtask_manager" property="subtask_manager"></result>
+            <result column="goalNum" property="goalNum"></result>
+            <result column="completedNum" property="completedNum"></result>
+            <result column="comments" property="comments"></result>
+            <result column="taskid" property="taskid"></result>
+        </collection>
+    </resultMap>
+    <select id="findsubtasks" parameterType="Long" resultType="cn.org.ltl.entity.Subtask">
+        select * from data.subtask where taskid = #{0}
+    </select>
+
+    <delete id="deleteTask" parameterType="Long">
+        delete from data.task where task_id = #{0}
+    </delete>
+
+    <delete id="deleteSubtask" parameterType="Long">
+        delete from data.subtask where subtask_id = #{0}
+    </delete>
+    <update id="reviseTask">
+        update data.task
+        set desc_task = #{1}, task_manager = #{2}, due_date = #{3} where task_id = #{0}
+    </update>
+    <update id="reviseSubtask">
+        update data.subtask
+        set desc_subtask = #{1}, subtask_manager = #{2}, goalNum = #{3}, completedNum = #{4}, comments = #{5} where subtask_id = #{0}
+    </update>
+</mapper>

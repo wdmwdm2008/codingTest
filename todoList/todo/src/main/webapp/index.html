@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
+    <link href="css/styles.css" rel="stylesheet" type="text/css"/>
+    <title>Login Page</title>
+    <!--webfonts-->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:600italic,400,300,600,700' rel='stylesheet' type='text/css'/>
+    <!--//webfonts-->
+</head>
+<body>
+    <!----- start-main ---->
+    <div class="main">
+        <!----- start-register-form ---->
+        <div class="login-form">
+            <h1>User Login</h1>
+            <div class="head">
+                <img src="images/user.png" alt=""/>
+            </div>
+            <form action="/page/login.do" method="post">
+                <input type="text" name="username" class="text" value="zhangsan" onfocus="this.value='';" onblur="if (this.value=='') {this.value ='zhangsan';}">
+                <input type="password" name="pwd" class="text" value="234" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = '234';}">
+                <div class="submit">
+                    <input type="submit" value="LOGIN"/>
+                </div>
+                <p><a href="#">Forget Password ?</a></p>
+            </form>
+        </div>
+        <!----- end-login-form ---->
+        <!----- start-copy-right ---->
+        <div class="copy-right">
+            <p>Copyright by <a href="http://tarcore.com/">Loring Tarcore Labs</a></p>
+        </div>
+        <!----- end-copy-right ---->
+    </div>
+    <!----- end-main ---->
+</body>
